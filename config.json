@@ -1,12 +1,12 @@
 {
   "version": 1,
-  "updatedAt": "2026-09-23T00:00:00.000Z",
+  "updatedAt": "2026-09-23T13:12:00+07:00",
   "title": "",
-  "color": 0,
+  "color": 3,
   "speed": 1,
   "clipStart": 0,
-  "clipEnd": 0,
-  "audioMode": "piano",
-  "audioUrl": "",
-  "audioTitle": "Nhạc Piano Lãng Mạn"
+  "clipEnd": 270.6,
+  "audioMode": "url",
+  "audioUrl": "./LAVIEM.mp3",
+  "audioTitle": "LAVIEM.mp3"
 }
