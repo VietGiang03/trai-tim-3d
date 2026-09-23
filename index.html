@@ -103,11 +103,11 @@
     <!-- Hidden HTML5 Audio -->
     <audio id="audioPlayer" loop crossorigin="anonymous"></audio>
 
-    <div class="ui-layer w-full min-h-screen flex flex-col justify-between items-center p-4 sm:p-6">
+    <div id="mainUiLayer" class="ui-layer hidden w-full min-h-screen flex flex-col justify-between items-center p-4 sm:p-6">
         
         <!-- Header Controls -->
-        <header class="w-full max-w-4xl flex justify-between items-center pointer-active">
-            <div class="flex items-center space-x-3">
+        <header id="headerControls" class="w-full max-w-4xl flex justify-between items-center pointer-active">
+            <div id="brandBlock" class="flex items-center space-x-3">
                 <div class="w-11 h-11 rounded-full bg-gradient-to-tr from-pink-500 via-rose-500 to-purple-500 flex items-center justify-center shadow-lg shadow-pink-500/50 border border-pink-300/40">
                     <i class="fa-solid fa-heart text-white text-xl animate-pulse"></i>
                 </div>
@@ -123,7 +123,7 @@
                 </button>
 
                 <!-- ADMIN ONLY -->
-                <div id="adminControls" class="flex items-center space-x-2">
+                <div id="adminControls" class="hidden flex items-center space-x-2">
                     <button onclick="toggleSettingsModal()" class="w-11 h-11 rounded-full glass-panel flex items-center justify-center text-pink-300 hover:text-white hover:border-pink-400 transition-all duration-300 shadow-md" title="Cài đặt">
                         <i class="fa-solid fa-sliders text-base"></i>
                     </button>
@@ -135,12 +135,7 @@
                 </div>
 
                 <!-- PUBLIC VIEWER ONLY -->
-                <div id="viewerControls" class="hidden">
-                    <button onclick="switchToCreateMode()" class="px-4 py-2 rounded-full glass-panel text-pink-200 hover:text-white text-xs font-semibold flex items-center space-x-1.5 border border-pink-500/40 hover:border-pink-400 transition-all shadow-md">
-                        <i class="fa-solid fa-wand-magic-sparkles text-pink-400"></i>
-                        <span>Tạo Trái Tim Của Bạn</span>
-                    </button>
-                </div>
+                <div id="viewerControls" class="hidden"></div>
             </div>
         </header>
 
@@ -156,7 +151,7 @@
                 <span id="songTitleText" class="truncate font-medium">Đang nạp nhạc...</span>
             </div>
 
-            <div class="flex gap-2 w-full justify-center">
+            <div id="footerActionButtons" class="flex gap-2 w-full justify-center">
                 <button id="changeColorBtn" onclick="changeHeartStyle()" class="px-4 py-2.5 rounded-2xl glass-panel text-xs sm:text-sm text-pink-200 hover:text-white font-medium flex items-center gap-2 border border-pink-500/30 transition-all hover:bg-pink-500/20">
                     <i class="fa-solid fa-palette text-pink-400"></i> Đổi Tông Màu
                 </button>
@@ -225,6 +220,24 @@
 
                 <div class="p-3.5 bg-pink-950/30 border border-pink-500/30 rounded-2xl">
                     <label class="block text-xs font-semibold text-pink-200 mb-2">
+                        <i class="fa-solid fa-repeat text-pink-400 mr-1"></i> Đoạn nhạc phát lặp:
+                    </label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="text-[10px] text-pink-300/80">Bắt đầu (giây)
+                            <input type="number" id="clipStartInput" min="0" step="0.1" value="0" class="mt-1 w-full bg-pink-950/70 border border-pink-500/40 rounded-xl px-3 py-2 text-xs text-pink-100 focus:outline-none focus:border-pink-400">
+                        </label>
+                        <label class="text-[10px] text-pink-300/80">Kết thúc (giây)
+                            <input type="number" id="clipEndInput" min="0.1" step="0.1" placeholder="Hết bài" class="mt-1 w-full bg-pink-950/70 border border-pink-500/40 rounded-xl px-3 py-2 text-xs text-pink-100 focus:outline-none focus:border-pink-400">
+                        </label>
+                    </div>
+                    <p id="clipDurationLabel" class="mt-2 text-[10px] text-pink-300/70">Chọn bài hát để xem thời lượng.</p>
+                    <button onclick="previewSelectedClip()" class="mt-2 w-full py-2 rounded-xl bg-pink-500/20 hover:bg-pink-500/30 border border-pink-400/30 text-xs font-semibold text-pink-200 transition">
+                        <i class="fa-solid fa-play mr-1"></i> Phát Thử Đoạn Đã Chọn
+                    </button>
+                </div>
+
+                <div class="p-3.5 bg-pink-950/30 border border-pink-500/30 rounded-2xl">
+                    <label class="block text-xs font-semibold text-pink-200 mb-2">
                         <i class="fa-solid fa-list-music text-pink-400 mr-1"></i> Bài hát mẫu:
                     </label>
                     <div class="space-y-2">
@@ -240,7 +253,7 @@
                 </div>
             </div>
 
-            <button onclick="toggleSettingsModal()" class="w-full mt-4 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 text-xs font-semibold text-white shadow-lg hover:opacity-90 transition">
+            <button onclick="saveConfiguration()" class="w-full mt-4 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 text-xs font-semibold text-white shadow-lg hover:opacity-90 transition">
                 Lưu Cấu Hình
             </button>
         </div>
@@ -258,9 +271,15 @@
             <h3 class="text-xl font-bold text-pink-100 mb-1">Mã QR Người Xem</h3>
             <p class="text-xs text-pink-300/80 mb-4">Gửi mã này cho đối phương. Người xem sẽ <b>KHÔNG THẤY</b> các nút chỉnh sửa!</p>
 
-            <div class="p-3 bg-white rounded-2xl shadow-xl border-4 border-pink-400/40 mb-4 flex items-center justify-center" id="qrcode-box">
+            <div class="p-2 bg-gradient-to-br from-pink-400 via-rose-400 to-purple-500 rounded-3xl shadow-[0_0_35px_rgba(236,72,153,0.35)] mb-4 flex items-center justify-center" id="qrcode-box">
                 <div id="qrcode"></div>
             </div>
+
+            <p id="qrShareNote" class="text-[11px] text-pink-200/80 mb-3"></p>
+
+            <a id="downloadQrBtn" href="#" download="ma-qr-trai-tim-3d-dac-biet.png" onclick="showToast('⬇️ Đã tải mã QR đặc biệt về máy!')" class="w-full py-2.5 mb-2 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 hover:opacity-90 text-xs font-semibold text-white transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-download"></i> Tải Mã QR PNG
+            </a>
 
             <button onclick="copyPublicViewerURL()" class="w-full py-2.5 rounded-xl bg-pink-500/20 hover:bg-pink-500/30 border border-pink-400/40 text-xs font-semibold text-pink-200 transition flex items-center justify-center gap-2">
                 <i class="fa-regular fa-copy"></i> Sao Chép Link Người Xem (Public)
@@ -610,8 +629,12 @@
         let audioSynthMode = false;
         let audioCtx = null;
         let synthOscillators = [];
-        let userRole = 'edit';
+        let userRole = 'view';
         let customSubtitleText = '';
+        let currentAudioMode = 'piano';
+        let currentAudioSourceUrl = '';
+        let clipStart = 0;
+        let clipEnd = 0;
 
         const PRESET_PIANO_URL = "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=romantic-piano-112199.mp3";
 
@@ -629,15 +652,15 @@
             const urlParams = new URLSearchParams(window.location.search);
             const hashParams = new URLSearchParams(window.location.hash.substring(1));
 
-            if (urlParams.get('mode') === 'view' || hashParams.get('mode') === 'view') {
-                userRole = 'view';
-            } else {
+            if (urlParams.get('mode') === 'edit' || hashParams.get('mode') === 'edit') {
                 userRole = 'edit';
+            } else {
+                userRole = 'view';
             }
 
             applyRoleUI();
 
-            const colorParam = urlParams.get('color') || hashParams.get('color');
+            const colorParam = urlParams.get('color') || hashParams.get('color') || (userRole === 'edit' ? localStorage.getItem('heart_color') : null);
             if (colorParam) {
                 const cIndex = parseInt(colorParam);
                 if (!isNaN(cIndex) && cIndex >= 0 && cIndex < colorPalettes.length) {
@@ -646,30 +669,50 @@
                 }
             }
 
-            const speedParam = urlParams.get('speed') || hashParams.get('speed');
+            const speedParam = urlParams.get('speed') || hashParams.get('speed') || (userRole === 'edit' ? localStorage.getItem('heart_speed') : null);
             if (speedParam) {
                 heartSpeed = parseFloat(speedParam) || 1.0;
                 document.getElementById('speedSlider').value = heartSpeed;
             }
 
-            const titleParam = urlParams.get('title') || hashParams.get('title');
+            const titleParam = urlParams.get('title') || hashParams.get('title') || (userRole === 'edit' ? localStorage.getItem('heart_subtitle') : null);
             if (titleParam) {
-                customSubtitleText = decodeURIComponent(titleParam);
+                customSubtitleText = titleParam;
                 updateCustomSubtitle(customSubtitleText);
             }
 
+            const explicitAudioMode = urlParams.get('audio') || hashParams.get('audio');
             const songUrl = urlParams.get('songUrl') || hashParams.get('songUrl');
-            if (songUrl) {
-                setCustomAudioSource(decodeURIComponent(songUrl), "Bài Hát Đã Cài Đặt");
+            const savedAudioMode = userRole === 'edit' ? localStorage.getItem('heart_audio_mode') : null;
+
+            if (explicitAudioMode === 'synth') {
+                useSynthAudio();
+            } else if (songUrl) {
+                // A song explicitly carried by the shared URL must win over
+                // whatever was previously saved in this browser's Admin page.
+                setCustomAudioSource(songUrl, "Bài Hát Đã Cài Đặt");
+                currentAudioMode = 'url';
+            } else if (explicitAudioMode === 'piano') {
+                setCustomAudioSource(PRESET_PIANO_URL, "Nhạc Piano Lãng Mạn");
+                currentAudioMode = 'piano';
             } else {
                 const savedAudio = localStorage.getItem('heart_custom_audio');
                 const savedTitle = localStorage.getItem('heart_custom_title');
-                if (savedAudio && userRole === 'edit') {
+                if (savedAudioMode === 'synth' && userRole === 'edit') {
+                    useSynthAudio();
+                } else if (savedAudio && userRole === 'edit') {
                     setCustomAudioSource(savedAudio, savedTitle || "Nhạc Của Bạn");
                 } else {
                     setCustomAudioSource(PRESET_PIANO_URL, "Nhạc Piano Lãng Mạn");
+                    currentAudioMode = 'piano';
                 }
             }
+
+            const clipStartParam = urlParams.get('clipStart') || hashParams.get('clipStart') || (userRole === 'edit' ? localStorage.getItem('heart_clip_start') : null);
+            const clipEndParam = urlParams.get('clipEnd') || hashParams.get('clipEnd') || (userRole === 'edit' ? localStorage.getItem('heart_clip_end') : null);
+            clipStart = Math.max(0, parseFloat(clipStartParam) || 0);
+            clipEnd = Math.max(0, parseFloat(clipEndParam) || 0);
+            syncClipInputs();
         }
 
         function applyRoleUI() {
@@ -678,16 +721,36 @@
             const viewerControls = document.getElementById('viewerControls');
             const changeColorBtn = document.getElementById('changeColorBtn');
             const footerHint = document.getElementById('footerHint');
+            const mainUiLayer = document.getElementById('mainUiLayer');
+            const brandBlock = document.getElementById('brandBlock');
+            const musicToggleBtn = document.getElementById('musicToggleBtn');
+            const currentSongDisplay = document.getElementById('currentSongDisplay');
+            const footerActionButtons = document.getElementById('footerActionButtons');
+            const headerControls = document.getElementById('headerControls');
 
             if (userRole === 'view') {
+                mainUiLayer.classList.remove('hidden');
+                headerControls.classList.remove('justify-between');
+                headerControls.classList.add('justify-end');
+                brandBlock.classList.add('hidden');
+                musicToggleBtn.classList.remove('hidden');
+                currentSongDisplay.classList.add('hidden');
+                footerActionButtons.classList.add('hidden');
                 roleBadge.className = "text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider w-max bg-pink-500/20 text-pink-300 border border-pink-500/30";
                 roleBadge.innerHTML = "<i class='fa-solid fa-eye text-[9px] mr-1'></i> Người Xem";
 
                 adminControls.classList.add('hidden');
-                viewerControls.classList.remove('hidden');
+                viewerControls.classList.add('hidden');
                 changeColorBtn.classList.add('hidden');
                 footerHint.innerText = "Vuốt chạm để xoay góc nhìn & phóng pháo hoa sao 3D ✨";
             } else {
+                mainUiLayer.classList.remove('hidden');
+                headerControls.classList.remove('justify-end');
+                headerControls.classList.add('justify-between');
+                brandBlock.classList.remove('hidden');
+                musicToggleBtn.classList.remove('hidden');
+                currentSongDisplay.classList.remove('hidden');
+                footerActionButtons.classList.remove('hidden');
                 roleBadge.className = "text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider w-max bg-amber-500/20 text-amber-300 border border-amber-500/30";
                 roleBadge.innerHTML = "<i class='fa-solid fa-pen-to-square text-[9px] mr-1'></i> Admin";
 
@@ -696,10 +759,6 @@
                 changeColorBtn.classList.remove('hidden');
                 footerHint.innerHTML = "Chạm để nổ hạt ✨ | Bấm <i class='fa-solid fa-sliders'></i> để chỉnh nhạc & lời nhắn";
             }
-        }
-
-        function switchToCreateMode() {
-            window.location.href = window.location.pathname + "?mode=edit";
         }
 
         let hasInteracted = false;
@@ -734,17 +793,90 @@
             heartSpeed = parseFloat(val);
         }
 
+        function syncClipInputs() {
+            document.getElementById('clipStartInput').value = clipStart.toFixed(1);
+            document.getElementById('clipEndInput').value = clipEnd > 0 ? clipEnd.toFixed(1) : '';
+            const duration = Number.isFinite(audioPlayer.duration) ? audioPlayer.duration : 0;
+            document.getElementById('clipDurationLabel').innerText = duration > 0
+                ? `Thời lượng bài: ${duration.toFixed(1)} giây. Đoạn lặp: ${clipStart.toFixed(1)}s – ${(clipEnd || duration).toFixed(1)}s.`
+                : "Đang chờ tải thời lượng bài hát…";
+        }
+
+        function applyClipInputs(showError = true) {
+            const start = Math.max(0, parseFloat(document.getElementById('clipStartInput').value) || 0);
+            const duration = Number.isFinite(audioPlayer.duration) ? audioPlayer.duration : 0;
+            const rawEnd = parseFloat(document.getElementById('clipEndInput').value);
+            const end = Number.isFinite(rawEnd) ? rawEnd : duration;
+
+            if (end > 0 && end <= start) {
+                if (showError) showToast("⚠️ Thời điểm kết thúc phải lớn hơn bắt đầu!");
+                return false;
+            }
+
+            clipStart = start;
+            clipEnd = end > 0 ? end : 0;
+            if (duration > 0) {
+                clipStart = Math.min(clipStart, Math.max(0, duration - 0.1));
+                clipEnd = Math.min(clipEnd || duration, duration);
+            }
+            syncClipInputs();
+            return true;
+        }
+
+        function resetClipRange() {
+            clipStart = 0;
+            clipEnd = 0;
+            syncClipInputs();
+        }
+
+        function previewSelectedClip() {
+            if (!applyClipInputs()) return;
+            if (audioSynthMode) {
+                showToast("ℹ️ Chọn đoạn chỉ áp dụng cho tệp hoặc link nhạc.");
+                return;
+            }
+            audioPlayer.currentTime = clipStart;
+            audioPlayer.play().catch(() => showToast("⚠️ Chạm màn hình để phát nhạc!"));
+            isAudioPlaying = true;
+            document.getElementById('musicIcon').className = "fa-solid fa-volume-high text-pink-400 animate-pulse";
+            showToast("🔁 Đang phát lặp đoạn đã chọn");
+        }
+
+        audioPlayer.addEventListener('loadedmetadata', () => {
+            const duration = audioPlayer.duration;
+            if (clipEnd <= 0 || clipEnd > duration) clipEnd = duration;
+            if (clipStart >= clipEnd) clipStart = 0;
+            syncClipInputs();
+        });
+
+        audioPlayer.addEventListener('timeupdate', () => {
+            if (!audioSynthMode && clipEnd > clipStart && audioPlayer.currentTime >= clipEnd) {
+                audioPlayer.currentTime = clipStart;
+                if (isAudioPlaying) audioPlayer.play().catch(() => {});
+            }
+        });
+
+        audioPlayer.addEventListener('play', () => {
+            if (!audioSynthMode && (audioPlayer.currentTime < clipStart || (clipEnd > clipStart && audioPlayer.currentTime >= clipEnd))) {
+                audioPlayer.currentTime = clipStart;
+            }
+        });
+
         function setCustomAudioSource(url, title) {
             stopSynthAudio();
             audioSynthMode = false;
+            currentAudioSourceUrl = url;
             audioPlayer.src = url;
             document.getElementById('songTitleText').innerText = title;
             document.getElementById('customAudioUrlInput').value = url.startsWith('data:') ? '' : url;
+            currentAudioMode = url.startsWith('data:') ? 'local' : (url === PRESET_PIANO_URL ? 'piano' : 'url');
         }
 
         function useSynthAudio() {
             audioPlayer.pause();
             audioSynthMode = true;
+            currentAudioMode = 'synth';
+            currentAudioSourceUrl = '';
             document.getElementById('songTitleText').innerText = "Nhạc Synth Vũ Trụ Lãng Mạn";
         }
 
@@ -788,6 +920,7 @@
                 } catch (err) {}
 
                 setCustomAudioSource(dataUrl, fileName);
+                resetClipRange();
                 showToast("✅ Đã nạp bài hát!");
                 if (!isAudioPlaying) togglePlayMusic();
             };
@@ -800,6 +933,7 @@
             if (!input) return;
 
             setCustomAudioSource(input, "Nhạc MP3 Online");
+            resetClipRange();
             localStorage.setItem('heart_custom_audio', input);
             localStorage.setItem('heart_custom_title', "Nhạc MP3 Online");
 
@@ -811,11 +945,13 @@
             if (userRole !== 'edit') return;
             if (type === 'synth') {
                 useSynthAudio();
+                resetClipRange();
                 localStorage.removeItem('heart_custom_audio');
                 localStorage.removeItem('heart_custom_title');
                 showToast("🎵 Đã chọn Nhạc Synth Vũ Trụ");
             } else if (type === 'piano') {
                 setCustomAudioSource(PRESET_PIANO_URL, "Nhạc Piano Lãng Mạn");
+                resetClipRange();
                 localStorage.setItem('heart_custom_audio', PRESET_PIANO_URL);
                 localStorage.setItem('heart_custom_title', "Nhạc Piano Lãng Mạn");
                 showToast("🎹 Đã chọn Nhạc Piano");
@@ -929,24 +1065,62 @@
             }
         }
 
-        function getPublicViewerURL() {
-            let baseUrl = window.location.origin + window.location.pathname;
+        function saveConfiguration() {
+            if (userRole !== 'edit' || !applyClipInputs()) return;
+
+            localStorage.setItem('heart_subtitle', customSubtitleText);
+            localStorage.setItem('heart_color', String(currentPaletteIndex));
+            localStorage.setItem('heart_speed', String(heartSpeed));
+            localStorage.setItem('heart_clip_start', String(clipStart));
+            localStorage.setItem('heart_clip_end', String(clipEnd));
+            localStorage.setItem('heart_audio_mode', currentAudioMode);
+
+            window.history.replaceState({}, '', buildConfiguredURL('edit'));
+            toggleSettingsModal();
+            showToast("✅ Đã lưu! QR mới sẽ dùng đúng cấu hình này.");
+        }
+
+        function buildConfiguredURL(mode) {
+            const baseUrl = window.location.origin + window.location.pathname;
             const params = new URLSearchParams();
 
-            params.set('mode', 'view');
+            params.set('mode', mode);
             params.set('color', currentPaletteIndex);
             params.set('speed', heartSpeed);
 
             if (customSubtitleText) {
-                params.set('title', encodeURIComponent(customSubtitleText));
+                params.set('title', customSubtitleText);
             }
 
-            const customAudio = localStorage.getItem('heart_custom_audio');
-            if (customAudio && !customAudio.startsWith('data:')) {
-                params.set('songUrl', encodeURIComponent(customAudio));
+            if (clipStart > 0) params.set('clipStart', clipStart.toFixed(1));
+            if (clipEnd > clipStart) params.set('clipEnd', clipEnd.toFixed(1));
+
+            const storedAudio = localStorage.getItem('heart_custom_audio') || '';
+            const selectedAudio = currentAudioSourceUrl || storedAudio;
+            const shareableAudioUrl = selectedAudio && !selectedAudio.startsWith('data:')
+                ? selectedAudio
+                : '';
+
+            if (currentAudioMode === 'synth') {
+                params.set('audio', 'synth');
+            } else if (currentAudioMode === 'url' && shareableAudioUrl) {
+                // A public MP3 URL can travel with the viewer link and QR.
+                params.set('songUrl', shareableAudioUrl);
+            } else {
+                // Files selected from this device are private browser data and
+                // cannot be opened on another phone. Keep the QR public and use
+                // the built-in piano instead of leaking an unusable local value.
+                params.set('audio', 'piano');
             }
 
             return `${baseUrl}?${params.toString()}`;
+        }
+
+        function getPublicViewerURL() {
+            const publicUrl = new URL(buildConfiguredURL('view'));
+            publicUrl.searchParams.set('mode', 'view');
+            publicUrl.hash = '';
+            return publicUrl.toString();
         }
 
         function openQRModal() {
@@ -956,6 +1130,11 @@
 
             const publicUrl = getPublicViewerURL();
             generateQRCode(publicUrl);
+
+            const note = document.getElementById('qrShareNote');
+            note.innerText = currentAudioMode === 'local'
+                ? "✅ QR luôn mở link PUBLIC. MP3 lấy từ máy chỉ có trên thiết bị này nên người xem sẽ nghe Piano; dùng link MP3 online nếu muốn họ nghe đúng bài."
+                : "✅ QR mở link PUBLIC và đã lưu màu, tốc độ, lời nhắn cùng nhạc hiện tại.";
 
             modal.classList.remove('opacity-0', 'pointer-events-none');
             card.classList.remove('scale-95');
@@ -971,18 +1150,138 @@
             modal.classList.add('opacity-0', 'pointer-events-none');
         }
 
+        let activeQRCodeCanvas = null;
+
+        function roundedRectPath(ctx, x, y, width, height, radius) {
+            const r = Math.min(radius, width / 2, height / 2);
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.arcTo(x + width, y, x + width, y + height, r);
+            ctx.arcTo(x + width, y + height, x, y + height, r);
+            ctx.arcTo(x, y + height, x, y, r);
+            ctx.arcTo(x, y, x + width, y, r);
+            ctx.closePath();
+        }
+
+        function drawFinderPattern(ctx, x, y, cell, fillStyle) {
+            ctx.fillStyle = fillStyle;
+            roundedRectPath(ctx, x, y, cell * 7, cell * 7, cell * 1.15);
+            ctx.fill();
+
+            ctx.fillStyle = '#ffffff';
+            roundedRectPath(ctx, x + cell, y + cell, cell * 5, cell * 5, cell * 0.7);
+            ctx.fill();
+
+            ctx.fillStyle = fillStyle;
+            roundedRectPath(ctx, x + cell * 2, y + cell * 2, cell * 3, cell * 3, cell * 0.55);
+            ctx.fill();
+        }
+
+        function drawHeartLogo(ctx, centerX, centerY, size) {
+            const plateSize = size * 1.55;
+            ctx.save();
+            ctx.shadowColor = 'rgba(120, 0, 70, 0.25)';
+            ctx.shadowBlur = size * 0.22;
+            ctx.fillStyle = '#ffffff';
+            roundedRectPath(ctx, centerX - plateSize / 2, centerY - plateSize / 2, plateSize, plateSize, plateSize * 0.28);
+            ctx.fill();
+            ctx.restore();
+
+            const logoGradient = ctx.createLinearGradient(centerX - size / 2, centerY - size / 2, centerX + size / 2, centerY + size / 2);
+            logoGradient.addColorStop(0, '#ff4f9a');
+            logoGradient.addColorStop(0.52, '#ff175f');
+            logoGradient.addColorStop(1, '#8b2be2');
+            ctx.fillStyle = logoGradient;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, size * 0.58, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            const top = centerY - size * 0.2;
+            ctx.moveTo(centerX, centerY + size * 0.3);
+            ctx.bezierCurveTo(centerX - size * 0.52, centerY, centerX - size * 0.42, top - size * 0.34, centerX - size * 0.18, top - size * 0.18);
+            ctx.bezierCurveTo(centerX - size * 0.05, top - size * 0.1, centerX, top, centerX, top + size * 0.03);
+            ctx.bezierCurveTo(centerX, top, centerX + size * 0.05, top - size * 0.1, centerX + size * 0.18, top - size * 0.18);
+            ctx.bezierCurveTo(centerX + size * 0.42, top - size * 0.34, centerX + size * 0.52, centerY, centerX, centerY + size * 0.3);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function renderSpecialQRCode(qrModel) {
+            const canvasSize = 560;
+            const margin = 44;
+            const moduleCount = qrModel.getModuleCount();
+            const cell = Math.floor((canvasSize - margin * 2) / moduleCount);
+            const codeSize = cell * moduleCount;
+            const offset = Math.floor((canvasSize - codeSize) / 2);
+            const canvas = document.createElement('canvas');
+            canvas.width = canvasSize;
+            canvas.height = canvasSize;
+            canvas.className = 'block w-[205px] h-[205px] rounded-2xl';
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvasSize, canvasSize);
+
+            const borderGradient = ctx.createLinearGradient(0, 0, canvasSize, canvasSize);
+            borderGradient.addColorStop(0, '#ff4f9a');
+            borderGradient.addColorStop(0.5, '#ff175f');
+            borderGradient.addColorStop(1, '#8b2be2');
+            ctx.strokeStyle = borderGradient;
+            ctx.lineWidth = 10;
+            roundedRectPath(ctx, 7, 7, canvasSize - 14, canvasSize - 14, 34);
+            ctx.stroke();
+
+            const moduleGradient = ctx.createLinearGradient(offset, offset, offset + codeSize, offset + codeSize);
+            moduleGradient.addColorStop(0, '#260018');
+            moduleGradient.addColorStop(0.45, '#710044');
+            moduleGradient.addColorStop(1, '#3f126f');
+
+            const isFinderCell = (row, col) => (
+                (row < 7 && col < 7) ||
+                (row < 7 && col >= moduleCount - 7) ||
+                (row >= moduleCount - 7 && col < 7)
+            );
+
+            ctx.fillStyle = moduleGradient;
+            for (let row = 0; row < moduleCount; row++) {
+                for (let col = 0; col < moduleCount; col++) {
+                    if (!qrModel.isDark(row, col) || isFinderCell(row, col)) continue;
+                    const x = offset + col * cell + cell * 0.08;
+                    const y = offset + row * cell + cell * 0.08;
+                    const side = cell * 0.84;
+                    roundedRectPath(ctx, x, y, side, side, cell * 0.23);
+                    ctx.fill();
+                }
+            }
+
+            drawFinderPattern(ctx, offset, offset, cell, moduleGradient);
+            drawFinderPattern(ctx, offset + (moduleCount - 7) * cell, offset, cell, moduleGradient);
+            drawFinderPattern(ctx, offset, offset + (moduleCount - 7) * cell, cell, moduleGradient);
+
+            drawHeartLogo(ctx, canvasSize / 2, canvasSize / 2, cell * 6.4);
+            return canvas;
+        }
+
         function generateQRCode(text) {
             const qrContainer = document.getElementById('qrcode');
             qrContainer.innerHTML = '';
+            qrContainer.dataset.publicUrl = text;
 
-            new QRCode(qrContainer, {
+            const qrCode = new QRCode(qrContainer, {
                 text: text,
-                width: 170,
-                height: 170,
+                width: 260,
+                height: 260,
                 colorDark: "#1a0011",
                 colorLight: "#ffffff",
                 correctLevel: QRCode.CorrectLevel.H
             });
+
+            activeQRCodeCanvas = renderSpecialQRCode(qrCode._oQRCode);
+            qrContainer.innerHTML = '';
+            qrContainer.appendChild(activeQRCodeCanvas);
+            document.getElementById('downloadQrBtn').href = activeQRCodeCanvas.toDataURL('image/png');
         }
 
         function copyPublicViewerURL() {
@@ -999,6 +1298,10 @@
         }
 
         function showToast(msg) {
+            // Keep the shared viewer experience clean: only the sound toggle and
+            // the gesture hint should remain on top of the heart animation.
+            if (userRole === 'view') return;
+
             const toast = document.getElementById('toast');
             const toastMsg = document.getElementById('toastMsg');
             toastMsg.innerText = msg;
@@ -1014,4 +1317,3 @@
     </script>
 </body>
 </html>
-
