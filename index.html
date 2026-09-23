@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Breathtaking 3D Romantic Heart ✨</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Three.js & Post-Processing Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+
+    <!-- QR Code Generator Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #020005;
+            color: #ffffff;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        .font-love {
+            font-family: 'Dancing Script', cursive;
+        }
+
+        #webgl-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            display: block;
+        }
+
+        .ui-layer {
+            position: relative;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .pointer-active {
+            pointer-events: auto;
+        }
+
+        .glass-panel {
+            background: rgba(12, 3, 20, 0.65);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border: 1px solid rgba(255, 105, 180, 0.25);
+            box-shadow: 0 12px 40px 0 rgba(255, 20, 147, 0.3);
+        }
+
+        .text-glow {
+            text-shadow: 0 0 20px rgba(255, 20, 147, 0.9),
+                         0 0 40px rgba(255, 105, 180, 0.7),
+                         0 0 60px rgba(255, 0, 128, 0.5);
+        }
+
+        .custom-scroll::-webkit-scrollbar { width: 5px; }
+        .custom-scroll::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255, 105, 180, 0.4); border-radius: 10px; }
+
+        #startOverlay {
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+    </style>
+</head>
+<body class="relative min-h-screen w-full flex flex-col justify-between items-center select-none">
+
+    <div id="startOverlay" onclick="handleInitialUserInteraction()" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90 backdrop-blur-2xl cursor-pointer p-6 text-center">
+        <div class="relative flex items-center justify-center mb-10">
+            <div class="absolute w-44 h-44 bg-rose-500/20 rounded-full animate-ping"></div>
+            <div class="absolute w-56 h-56 bg-pink-500/15 rounded-full animate-pulse"></div>
+            <div class="w-32 h-32 rounded-full bg-gradient-to-tr from-pink-600 via-rose-500 to-amber-400 flex items-center justify-center shadow-2xl shadow-rose-500/80 text-white text-6xl animate-bounce">
+                <i class="fa-solid fa-heart"></i>
+            </div>
+        </div>
+        <h2 id="welcomeTitle" class="text-3xl sm:text-5xl font-bold text-pink-200 text-glow mb-3 font-love">Kiệt Tác Trái Tim 3D Bloom</h2>
+        <p class="text-xs sm:text-sm text-pink-300/80 max-w-xs mb-8">Chạm nhẹ vào màn hình để khai mở phép thuật & nghe nhạc tự động ❤️</p>
+        <div class="px-8 py-4 rounded-full bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 text-white text-xs sm:text-sm font-semibold shadow-2xl shadow-pink-500/60 flex items-center gap-2 animate-pulse">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Chạm Để Mở Quà
+        </div>
+    </div>
+
+    <!-- WebGL Canvas Context -->
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- Hidden HTML5 Audio -->
+    <audio id="audioPlayer" loop crossorigin="anonymous"></audio>
+
+    <div class="ui-layer w-full min-h-screen flex flex-col justify-between items-center p-4 sm:p-6">
+        
+        <!-- Header Controls -->
+        <header class="w-full max-w-4xl flex justify-between items-center pointer-active">
+            <div class="flex items-center space-x-3">
+                <div class="w-11 h-11 rounded-full bg-gradient-to-tr from-pink-500 via-rose-500 to-purple-500 flex items-center justify-center shadow-lg shadow-pink-500/50 border border-pink-300/40">
+                    <i class="fa-solid fa-heart text-white text-xl animate-pulse"></i>
+                </div>
+                <div class="flex flex-col">
+                    <span id="appHeaderTitle" class="font-love text-2xl sm:text-3xl font-bold text-pink-200 text-glow">3D Magic Heart</span>
+                    <span id="roleBadge" class="text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider w-max shadow-sm"></span>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                <button id="musicToggleBtn" onclick="togglePlayMusic()" class="w-11 h-11 rounded-full glass-panel flex items-center justify-center text-pink-300 hover:text-white hover:border-pink-400 transition-all duration-300 shadow-md">
+                    <i id="musicIcon" class="fa-solid fa-music text-base"></i>
+                </button>
+
+                <!-- ADMIN ONLY -->
+                <div id="adminControls" class="flex items-center space-x-2">
+                    <button onclick="toggleSettingsModal()" class="w-11 h-11 rounded-full glass-panel flex items-center justify-center text-pink-300 hover:text-white hover:border-pink-400 transition-all duration-300 shadow-md" title="Cài đặt">
+                        <i class="fa-solid fa-sliders text-base"></i>
+                    </button>
+
+                    <button onclick="openQRModal()" class="px-4 py-2.5 rounded-full glass-panel text-pink-200 hover:text-white text-xs sm:text-sm font-semibold flex items-center space-x-2 border border-pink-500/40 hover:border-pink-400 transition-all duration-300 shadow-md">
+                        <i class="fa-solid fa-qrcode text-pink-400"></i>
+                        <span class="hidden sm:inline">Tạo QR Người Xem</span>
+                    </button>
+                </div>
+
+                <!-- PUBLIC VIEWER ONLY -->
+                <div id="viewerControls" class="hidden">
+                    <button onclick="switchToCreateMode()" class="px-4 py-2 rounded-full glass-panel text-pink-200 hover:text-white text-xs font-semibold flex items-center space-x-1.5 border border-pink-500/40 hover:border-pink-400 transition-all shadow-md">
+                        <i class="fa-solid fa-wand-magic-sparkles text-pink-400"></i>
+                        <span>Tạo Trái Tim Của Bạn</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Subtitle Text -->
+        <main class="text-center my-auto pointer-events-none">
+            <h1 id="customDisplaySubtitle" class="font-love text-3xl sm:text-5xl lg:text-6xl font-bold text-pink-100 text-glow opacity-95 transition-all"></h1>
+        </main>
+
+        <!-- Footer Control Bar -->
+        <footer class="w-full max-w-md pointer-active flex flex-col items-center gap-3">
+            <div id="currentSongDisplay" class="text-xs text-pink-200/90 glass-panel px-4 py-2 rounded-full border border-pink-500/30 flex items-center gap-2 max-w-xs truncate shadow-lg">
+                <i class="fa-solid fa-compact-disc animate-spin text-pink-400"></i>
+                <span id="songTitleText" class="truncate font-medium">Đang nạp nhạc...</span>
+            </div>
+
+            <div class="flex gap-2 w-full justify-center">
+                <button id="changeColorBtn" onclick="changeHeartStyle()" class="px-4 py-2.5 rounded-2xl glass-panel text-xs sm:text-sm text-pink-200 hover:text-white font-medium flex items-center gap-2 border border-pink-500/30 transition-all hover:bg-pink-500/20">
+                    <i class="fa-solid fa-palette text-pink-400"></i> Đổi Tông Màu
+                </button>
+
+                <button onclick="triggerExplosion()" class="px-4 py-2.5 rounded-2xl glass-panel text-xs sm:text-sm text-pink-200 hover:text-white font-medium flex items-center gap-2 border border-pink-500/30 transition-all hover:bg-pink-500/20">
+                    <i class="fa-solid fa-wand-magic-sparkles text-pink-400"></i> Bùng Nổ Phép Thuật
+                </button>
+            </div>
+            
+            <p id="footerHint" class="text-[11px] text-pink-300/70 font-light text-center">
+                Vuốt chạm để xoay góc nhìn & phóng pháo hoa sao 3D ✨
+            </p>
+        </footer>
+    </div>
+
+    <div id="settingsModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300">
+        <div class="glass-panel w-full max-w-md rounded-3xl p-6 flex flex-col relative border border-pink-500/50 shadow-2xl transform scale-95 transition-all duration-300 max-h-[90vh]" id="settingsCard">
+            <button onclick="toggleSettingsModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-pink-950/60 border border-pink-500/40 text-pink-300 flex items-center justify-center hover:bg-pink-600 hover:text-white transition-all">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-full bg-pink-500/20 border border-pink-400/40 flex items-center justify-center text-pink-400 text-lg">
+                    <i class="fa-solid fa-sliders"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-pink-100">Cấu Hình Lãng Mạn (Admin)</h3>
+                    <p class="text-xs text-pink-300/70">Tùy chỉnh bài hát, lời nhắn & hiệu ứng</p>
+                </div>
+            </div>
+
+            <div class="overflow-y-auto custom-scroll pr-1 space-y-4">
+                <div class="p-3.5 bg-pink-950/30 border border-pink-500/30 rounded-2xl">
+                    <label class="block text-xs font-semibold text-pink-200 mb-1.5">
+                        <i class="fa-solid fa-pen-fancy text-pink-400 mr-1"></i> Tựa đề / Lời nhắn:
+                    </label>
+                    <input type="text" id="customTitleInput" oninput="updateCustomSubtitle(this.value)" placeholder="Ví dụ: Anh Yêu Em Trọn Đời ❤️" class="w-full bg-pink-950/70 border border-pink-500/40 rounded-xl px-3 py-2 text-xs text-pink-100 focus:outline-none focus:border-pink-400">
+                </div>
+
+                <div class="p-3.5 bg-pink-950/30 border border-pink-500/30 rounded-2xl flex items-center justify-between">
+                    <span class="text-xs text-pink-200 font-semibold"><i class="fa-solid fa-gauge-fast text-pink-400 mr-1"></i> Tốc độ đập nhịp:</span>
+                    <input type="range" id="speedSlider" min="0.5" max="2.5" step="0.1" value="1.0" oninput="adjustHeartSpeed(this.value)" class="w-32 accent-pink-500 cursor-pointer">
+                </div>
+
+                <div class="p-3.5 bg-pink-950/30 border border-pink-500/30 rounded-2xl">
+                    <label class="block text-xs font-semibold text-pink-200 mb-2">
+                        <i class="fa-solid fa-file-audio text-pink-400 mr-1"></i> Tải nhạc MP3 từ máy:
+                    </label>
+                    <input type="file" id="audioFileInput" accept="audio/*" onchange="handleFileUpload(event)" class="hidden">
+                    <label for="audioFileInput" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-pink-600/60 to-rose-600/60 hover:from-pink-500 hover:to-rose-500 border border-pink-400/40 text-xs font-medium text-white flex items-center justify-center gap-2 cursor-pointer transition shadow-md">
+                        <i class="fa-solid fa-upload"></i> Chọn Tệp MP3
+                    </label>
+                </div>
+
+                <div class="p-3.5 bg-pink-950/30 border border-pink-500/30 rounded-2xl">
+                    <label class="block text-xs font-semibold text-pink-200 mb-2">
+                        <i class="fa-solid fa-link text-pink-400 mr-1"></i> Hoặc dán link MP3 online:
+                    </label>
+                    <div class="flex gap-2">
+                        <input type="text" id="customAudioUrlInput" placeholder="https://example.com/song.mp3" class="w-full bg-pink-950/70 border border-pink-500/40 rounded-xl px-3 py-2 text-xs text-pink-100 focus:outline-none focus:border-pink-400">
+                        <button onclick="applyCustomAudioUrl()" class="px-3 py-2 bg-pink-500 hover:bg-pink-400 rounded-xl text-xs font-semibold text-white transition">
+                            Áp Dụng
+                        </button>
+                    </div>
+                </div>
+
+                <div class="p-3.5 bg-pink-950/30 border border-pink-500/30 rounded-2xl">
+                    <label class="block text-xs font-semibold text-pink-200 mb-2">
+                        <i class="fa-solid fa-list-music text-pink-400 mr-1"></i> Bài hát mẫu:
+                    </label>
+                    <div class="space-y-2">
+                        <button onclick="selectPresetSong('synth')" class="w-full text-left px-3 py-2 rounded-xl bg-pink-900/30 hover:bg-pink-800/40 border border-pink-500/20 text-xs text-pink-200 flex justify-between items-center transition">
+                            <span><i class="fa-solid fa-heart-pulse text-pink-400 mr-2"></i> Nhạc Synth Vũ Trụ Lãng Mạn</span>
+                            <i class="fa-solid fa-chevron-right text-[10px] text-pink-400"></i>
+                        </button>
+                        <button onclick="selectPresetSong('piano')" class="w-full text-left px-3 py-2 rounded-xl bg-pink-900/30 hover:bg-pink-800/40 border border-pink-500/20 text-xs text-pink-200 flex justify-between items-center transition">
+                            <span><i class="fa-solid fa-music text-pink-400 mr-2"></i> Nhạc Piano Nhẹ Nhàng</span>
+                            <i class="fa-solid fa-chevron-right text-[10px] text-pink-400"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="toggleSettingsModal()" class="w-full mt-4 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 text-xs font-semibold text-white shadow-lg hover:opacity-90 transition">
+                Lưu Cấu Hình
+            </button>
+        </div>
+    </div>
+
+    <div id="qrModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300">
+        <div class="glass-panel w-full max-w-sm rounded-3xl p-6 flex flex-col items-center text-center relative border border-pink-500/50 shadow-2xl transform scale-95 transition-all duration-300" id="qrModalCard">
+            <button onclick="closeQRModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-pink-950/60 border border-pink-500/40 text-pink-300 flex items-center justify-center hover:bg-pink-600 hover:text-white transition-all">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="w-12 h-12 rounded-full bg-pink-500/20 border border-pink-400/40 flex items-center justify-center mb-3 text-pink-400 text-xl">
+                <i class="fa-solid fa-qrcode"></i>
+            </div>
+            <h3 class="text-xl font-bold text-pink-100 mb-1">Mã QR Người Xem</h3>
+            <p class="text-xs text-pink-300/80 mb-4">Gửi mã này cho đối phương. Người xem sẽ <b>KHÔNG THẤY</b> các nút chỉnh sửa!</p>
+
+            <div class="p-3 bg-white rounded-2xl shadow-xl border-4 border-pink-400/40 mb-4 flex items-center justify-center" id="qrcode-box">
+                <div id="qrcode"></div>
+            </div>
+
+            <button onclick="copyPublicViewerURL()" class="w-full py-2.5 rounded-xl bg-pink-500/20 hover:bg-pink-500/30 border border-pink-400/40 text-xs font-semibold text-pink-200 transition flex items-center justify-center gap-2">
+                <i class="fa-regular fa-copy"></i> Sao Chép Link Người Xem (Public)
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 z-50 glass-panel px-4 py-2.5 rounded-full border border-pink-400/50 text-xs text-pink-200 shadow-xl opacity-0 transition-all duration-300 translate-y-4 pointer-events-none flex items-center gap-2">
+        <i class="fa-solid fa-circle-check text-pink-400"></i>
+        <span id="toastMsg">Đã cập nhật!</span>
+    </div>
+
+    <script>
+        // Color Themes Setup
+        const colorPalettes = [
+            { primary: 0xff0055, secondary: 0xff66bb, accent: 0xffe6f2, bloom: 0xff0055, name: "Ruby Romance" },
+            { primary: 0xff1493, secondary: 0xffb6c1, accent: 0xffffff, bloom: 0xff1493, name: "Pink Diamond" },
+            { primary: 0x9d00ff, secondary: 0xe0a0ff, accent: 0xffffff, bloom: 0x9d00ff, name: "Violet Dream" },
+            { primary: 0x00f2fe, secondary: 0x4facfe, accent: 0xe0ffff, bloom: 0x00f2fe, name: "Cyber Emerald" },
+            { primary: 0xff8800, secondary: 0xffd700, accent: 0xfff8dc, bloom: 0xffaa00, name: "Gold Sunset" }
+        ];
+        let currentPaletteIndex = 0;
+
+        // Three.js Core Engine
+        const canvas = document.getElementById('webgl-canvas');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x020005, 0.0012);
+
+        const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 110;
+
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        // Post Processing (Unreal Bloom Shader Pass)
+        const renderScene = new THREE.RenderPass(scene, camera);
+        const bloomPass = new THREE.UnrealBloomPass(
+            new THREE.Vector2(window.innerWidth, window.innerHeight),
+            1.6, // bloom strength
+            0.4, // radius
+            0.15 // threshold
+        );
+
+        const composer = new THREE.EffectComposer(renderer);
+        composer.addPass(renderScene);
+        composer.addPass(bloomPass);
+
+        function createGlowTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 128;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+
+            const grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+            grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+            grad.addColorStop(0.2, 'rgba(255, 120, 180, 0.9)');
+            grad.addColorStop(0.5, 'rgba(255, 20, 147, 0.4)');
+            grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 128, 128);
+
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        const particleTexture = createGlowTexture();
+
+        // 3D High-Density Parametric Heart
+        const PARTICLE_COUNT = 28000;
+        const heartGeometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(PARTICLE_COUNT * 3);
+        const basePositions = new Float32Array(PARTICLE_COUNT * 3);
+        const colors = new Float32Array(PARTICLE_COUNT * 3);
+        const sizes = new Float32Array(PARTICLE_COUNT);
+
+        function parametricHeart(t, u) {
+            const x = 16 * Math.pow(Math.sin(t), 3) * Math.cos(u);
+            const y = (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) * Math.cos(u);
+            const z = 9 * Math.sin(u);
+            return new THREE.Vector3(x, y, z);
+        }
+
+        const pCol = new THREE.Color(colorPalettes[0].primary);
+        const sCol = new THREE.Color(colorPalettes[0].secondary);
+
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+            const t = Math.random() * Math.PI * 2;
+            const u = (Math.random() - 0.5) * Math.PI;
+
+            const pos = parametricHeart(t, u);
+            const volFill = Math.pow(Math.random(), 0.35);
+            const jitter = (Math.random() - 0.5) * 1.2;
+
+            const fx = pos.x * volFill * 2.3 + jitter;
+            const fy = pos.y * volFill * 2.3 + jitter;
+            const fz = pos.z * volFill * 2.3 + jitter;
+
+            positions[i * 3] = basePositions[i * 3] = fx;
+            positions[i * 3 + 1] = basePositions[i * 3 + 1] = fy;
+            positions[i * 3 + 2] = basePositions[i * 3 + 2] = fz;
+
+            const mixColor = pCol.clone().lerp(sCol, Math.random());
+            colors[i * 3] = mixColor.r;
+            colors[i * 3 + 1] = mixColor.g;
+            colors[i * 3 + 2] = mixColor.b;
+
+            sizes[i] = Math.random() * 3.2 + 1.2;
+        }
+
+        heartGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        heartGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        heartGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+        const heartMaterial = new THREE.PointsMaterial({
+            size: 2.8,
+            vertexColors: true,
+            map: particleTexture,
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        });
+
+        const heartMesh = new THREE.Points(heartGeometry, heartMaterial);
+        scene.add(heartMesh);
+
+        const coreGeo = new THREE.SphereGeometry(12, 32, 32);
+        const coreMat = new THREE.MeshBasicMaterial({
+            color: colorPalettes[0].primary,
+            transparent: true,
+            opacity: 0.35,
+            blending: THREE.AdditiveBlending
+        });
+        const coreAura = new THREE.Mesh(coreGeo, coreMat);
+        scene.add(coreAura);
+
+        // Floating Crystal Shards
+        const crystalsGroup = new THREE.Group();
+        const crystalGeo = new THREE.OctahedronGeometry(1.5, 0);
+        const crystalMat = new THREE.MeshBasicMaterial({
+            color: colorPalettes[0].secondary,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.4,
+            blending: THREE.AdditiveBlending
+        });
+
+        for (let i = 0; i < 45; i++) {
+            const crystal = new THREE.Mesh(crystalGeo, crystalMat);
+            crystal.position.set(
+                (Math.random() - 0.5) * 160,
+                (Math.random() - 0.5) * 160,
+                (Math.random() - 0.5) * 160
+            );
+            crystal.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+            const s = Math.random() * 1.8 + 0.5;
+            crystal.scale.set(s, s * 2, s);
+            crystalsGroup.add(crystal);
+        }
+        scene.add(crystalsGroup);
+
+        // Double Orbiting Energy Ribbon Rings
+        const ringGeo1 = new THREE.TorusGeometry(40, 0.5, 16, 120);
+        const ringMat1 = new THREE.MeshBasicMaterial({
+            color: colorPalettes[0].secondary,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.5,
+            blending: THREE.AdditiveBlending
+        });
+        const ribbon1 = new THREE.Mesh(ringGeo1, ringMat1);
+        ribbon1.rotation.x = Math.PI / 3;
+        scene.add(ribbon1);
+
+        const ringGeo2 = new THREE.TorusGeometry(48, 0.3, 16, 120);
+        const ringMat2 = new THREE.MeshBasicMaterial({
+            color: colorPalettes[0].accent,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.3,
+            blending: THREE.AdditiveBlending
+        });
+        const ribbon2 = new THREE.Mesh(ringGeo2, ringMat2);
+        ribbon2.rotation.y = Math.PI / 4;
+        scene.add(ribbon2);
+
+        // Background Bokeh Stars
+        const BOKEH_COUNT = 1500;
+        const bokehGeo = new THREE.BufferGeometry();
+        const bokehPos = new Float32Array(BOKEH_COUNT * 3);
+
+        for (let i = 0; i < BOKEH_COUNT; i++) {
+            bokehPos[i * 3] = (Math.random() - 0.5) * 400;
+            bokehPos[i * 3 + 1] = (Math.random() - 0.5) * 400;
+            bokehPos[i * 3 + 2] = (Math.random() - 0.5) * 400;
+        }
+
+        bokehGeo.setAttribute('position', new THREE.BufferAttribute(bokehPos, 3));
+        const bokehMat = new THREE.PointsMaterial({
+            size: 1.8,
+            color: 0xffffff,
+            map: particleTexture,
+            transparent: true,
+            opacity: 0.6,
+            blending: THREE.AdditiveBlending
+        });
+        const bokehPoints = new THREE.Points(bokehGeo, bokehMat);
+        scene.add(bokehPoints);
+
+        // Particle Explosions Pool
+        let activeExplosions = [];
+        function trigger3DExplosion(vec) {
+            const count = 450;
+            const expGeo = new THREE.BufferGeometry();
+            const expPos = new Float32Array(count * 3);
+            const velocities = [];
+
+            for (let i = 0; i < count; i++) {
+                expPos[i * 3] = vec.x;
+                expPos[i * 3 + 1] = vec.y;
+                expPos[i * 3 + 2] = vec.z;
+
+                const dir = new THREE.Vector3(
+                    (Math.random() - 0.5) * 2,
+                    (Math.random() - 0.5) * 2,
+                    (Math.random() - 0.5) * 2
+                ).normalize().multiplyScalar(Math.random() * 3.0 + 1.0);
+
+                velocities.push(dir);
+            }
+
+            expGeo.setAttribute('position', new THREE.BufferAttribute(expPos, 3));
+            const expMat = new THREE.PointsMaterial({
+                size: 3.0,
+                color: colorPalettes[currentPaletteIndex].secondary,
+                map: particleTexture,
+                transparent: true,
+                opacity: 1.0,
+                blending: THREE.AdditiveBlending
+            });
+
+            const expMesh = new THREE.Points(expGeo, expMat);
+            scene.add(expMesh);
+
+            activeExplosions.push({ mesh: expMesh, velocities: velocities, life: 1.0 });
+        }
+
+        let heartSpeed = 1.0;
+        let time = 0;
+        let targetRotX = 0, targetRotY = 0;
+
+        window.addEventListener('mousemove', (e) => {
+            targetRotY = (e.clientX / window.innerWidth - 0.5) * 0.6;
+            targetRotX = (e.clientY / window.innerHeight - 0.5) * 0.6;
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                targetRotY = (e.touches[0].clientX / window.innerWidth - 0.5) * 0.6;
+                targetRotX = (e.touches[0].clientY / window.innerHeight - 0.5) * 0.6;
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            time += 0.022 * heartSpeed;
+
+            // Organic Double Pulse Formula
+            const pulse = Math.sin(time * 2.8) * Math.sin(time * 5.6);
+            const beatScale = 1.0 + Math.max(0, pulse) * 0.25;
+
+            // Vertex deformation on beat
+            const posAttr = heartGeometry.attributes.position;
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                posAttr.setXYZ(
+                    i,
+                    basePositions[i * 3] * beatScale,
+                    basePositions[i * 3 + 1] * beatScale,
+                    basePositions[i * 3 + 2] * beatScale
+                );
+            }
+            posAttr.needsUpdate = true;
+
+            // Smooth parallax rotation
+            heartMesh.rotation.y += (targetRotY - heartMesh.rotation.y) * 0.05 + 0.003;
+            heartMesh.rotation.x += (targetRotX - heartMesh.rotation.x) * 0.05;
+
+            // Orbiting elements animation
+            ribbon1.rotation.z = time * 0.5;
+            ribbon1.rotation.y = time * 0.3;
+            ribbon1.scale.set(beatScale, beatScale, beatScale);
+
+            ribbon2.rotation.z = -time * 0.4;
+            ribbon2.rotation.x = time * 0.2;
+
+            coreAura.scale.set(beatScale, beatScale, beatScale);
+
+            // Floating crystal shards motion
+            crystalsGroup.children.forEach((cr, idx) => {
+                cr.rotation.x += 0.015;
+                cr.rotation.y += 0.015;
+                cr.position.y += Math.sin(time + idx) * 0.12;
+            });
+
+            bokehPoints.rotation.y = time * 0.03;
+
+            // Explosions updating
+            activeExplosions.forEach((exp, index) => {
+                const p = exp.mesh.geometry.attributes.position;
+                exp.life -= 0.02;
+                exp.mesh.material.opacity = exp.life;
+
+                for (let i = 0; i < exp.velocities.length; i++) {
+                    p.setXYZ(
+                        i,
+                        p.getX(i) + exp.velocities[i].x,
+                        p.getY(i) + exp.velocities[i].y,
+                        p.getZ(i) + exp.velocities[i].z
+                    );
+                }
+                p.needsUpdate = true;
+
+                if (exp.life <= 0) {
+                    scene.remove(exp.mesh);
+                    exp.mesh.geometry.dispose();
+                    exp.mesh.material.dispose();
+                    activeExplosions.splice(index, 1);
+                }
+            });
+
+            composer.render();
+        }
+
+        animate();
+
+        const audioPlayer = document.getElementById('audioPlayer');
+        let isAudioPlaying = false;
+        let audioSynthMode = false;
+        let audioCtx = null;
+        let synthOscillators = [];
+        let userRole = 'edit';
+        let customSubtitleText = '';
+
+        const PRESET_PIANO_URL = "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=romantic-piano-112199.mp3";
+
+        function initAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            parseRoleAndURLParams();
+        });
+
+        function parseRoleAndURLParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const hashParams = new URLSearchParams(window.location.hash.substring(1));
+
+            if (urlParams.get('mode') === 'view' || hashParams.get('mode') === 'view') {
+                userRole = 'view';
+            } else {
+                userRole = 'edit';
+            }
+
+            applyRoleUI();
+
+            const colorParam = urlParams.get('color') || hashParams.get('color');
+            if (colorParam) {
+                const cIndex = parseInt(colorParam);
+                if (!isNaN(cIndex) && cIndex >= 0 && cIndex < colorPalettes.length) {
+                    currentPaletteIndex = cIndex;
+                    update3DColors();
+                }
+            }
+
+            const speedParam = urlParams.get('speed') || hashParams.get('speed');
+            if (speedParam) {
+                heartSpeed = parseFloat(speedParam) || 1.0;
+                document.getElementById('speedSlider').value = heartSpeed;
+            }
+
+            const titleParam = urlParams.get('title') || hashParams.get('title');
+            if (titleParam) {
+                customSubtitleText = decodeURIComponent(titleParam);
+                updateCustomSubtitle(customSubtitleText);
+            }
+
+            const songUrl = urlParams.get('songUrl') || hashParams.get('songUrl');
+            if (songUrl) {
+                setCustomAudioSource(decodeURIComponent(songUrl), "Bài Hát Đã Cài Đặt");
+            } else {
+                const savedAudio = localStorage.getItem('heart_custom_audio');
+                const savedTitle = localStorage.getItem('heart_custom_title');
+                if (savedAudio && userRole === 'edit') {
+                    setCustomAudioSource(savedAudio, savedTitle || "Nhạc Của Bạn");
+                } else {
+                    setCustomAudioSource(PRESET_PIANO_URL, "Nhạc Piano Lãng Mạn");
+                }
+            }
+        }
+
+        function applyRoleUI() {
+            const roleBadge = document.getElementById('roleBadge');
+            const adminControls = document.getElementById('adminControls');
+            const viewerControls = document.getElementById('viewerControls');
+            const changeColorBtn = document.getElementById('changeColorBtn');
+            const footerHint = document.getElementById('footerHint');
+
+            if (userRole === 'view') {
+                roleBadge.className = "text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider w-max bg-pink-500/20 text-pink-300 border border-pink-500/30";
+                roleBadge.innerHTML = "<i class='fa-solid fa-eye text-[9px] mr-1'></i> Người Xem";
+
+                adminControls.classList.add('hidden');
+                viewerControls.classList.remove('hidden');
+                changeColorBtn.classList.add('hidden');
+                footerHint.innerText = "Vuốt chạm để xoay góc nhìn & phóng pháo hoa sao 3D ✨";
+            } else {
+                roleBadge.className = "text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider w-max bg-amber-500/20 text-amber-300 border border-amber-500/30";
+                roleBadge.innerHTML = "<i class='fa-solid fa-pen-to-square text-[9px] mr-1'></i> Admin";
+
+                adminControls.classList.remove('hidden');
+                viewerControls.classList.add('hidden');
+                changeColorBtn.classList.remove('hidden');
+                footerHint.innerHTML = "Chạm để nổ hạt ✨ | Bấm <i class='fa-solid fa-sliders'></i> để chỉnh nhạc & lời nhắn";
+            }
+        }
+
+        function switchToCreateMode() {
+            window.location.href = window.location.pathname + "?mode=edit";
+        }
+
+        let hasInteracted = false;
+        function handleInitialUserInteraction() {
+            if (hasInteracted) return;
+            hasInteracted = true;
+
+            const startOverlay = document.getElementById('startOverlay');
+            if (startOverlay) {
+                startOverlay.style.opacity = '0';
+                startOverlay.style.visibility = 'hidden';
+                setTimeout(() => startOverlay.remove(), 800);
+            }
+
+            trigger3DExplosion(new THREE.Vector3(0, 0, 0));
+
+            if (!isAudioPlaying) {
+                togglePlayMusic();
+            }
+        }
+
+        function updateCustomSubtitle(text) {
+            customSubtitleText = text;
+            document.getElementById('customDisplaySubtitle').innerText = text;
+            document.getElementById('customTitleInput').value = text;
+            if (text) {
+                document.getElementById('welcomeTitle').innerText = text;
+            }
+        }
+
+        function adjustHeartSpeed(val) {
+            heartSpeed = parseFloat(val);
+        }
+
+        function setCustomAudioSource(url, title) {
+            stopSynthAudio();
+            audioSynthMode = false;
+            audioPlayer.src = url;
+            document.getElementById('songTitleText').innerText = title;
+            document.getElementById('customAudioUrlInput').value = url.startsWith('data:') ? '' : url;
+        }
+
+        function useSynthAudio() {
+            audioPlayer.pause();
+            audioSynthMode = true;
+            document.getElementById('songTitleText').innerText = "Nhạc Synth Vũ Trụ Lãng Mạn";
+        }
+
+        function togglePlayMusic() {
+            const musicIcon = document.getElementById('musicIcon');
+
+            if (!isAudioPlaying) {
+                if (audioSynthMode) {
+                    startSynthAudio();
+                } else {
+                    audioPlayer.play().catch(() => showToast("⚠️ Chạm màn hình để phát nhạc!"));
+                }
+                isAudioPlaying = true;
+                musicIcon.className = "fa-solid fa-volume-high text-pink-400 animate-pulse";
+                showToast("🎵 Đang phát nhạc");
+            } else {
+                if (audioSynthMode) {
+                    stopSynthAudio();
+                } else {
+                    audioPlayer.pause();
+                }
+                isAudioPlaying = false;
+                musicIcon.className = "fa-solid fa-music text-base";
+                showToast("🔇 Đã dừng nhạc");
+            }
+        }
+
+        function handleFileUpload(event) {
+            if (userRole !== 'edit') return;
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const dataUrl = e.target.result;
+                const fileName = file.name;
+
+                try {
+                    localStorage.setItem('heart_custom_audio', dataUrl);
+                    localStorage.setItem('heart_custom_title', fileName);
+                } catch (err) {}
+
+                setCustomAudioSource(dataUrl, fileName);
+                showToast("✅ Đã nạp bài hát!");
+                if (!isAudioPlaying) togglePlayMusic();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function applyCustomAudioUrl() {
+            if (userRole !== 'edit') return;
+            const input = document.getElementById('customAudioUrlInput').value.trim();
+            if (!input) return;
+
+            setCustomAudioSource(input, "Nhạc MP3 Online");
+            localStorage.setItem('heart_custom_audio', input);
+            localStorage.setItem('heart_custom_title', "Nhạc MP3 Online");
+
+            showToast("✅ Đã áp dụng link nhạc!");
+            if (!isAudioPlaying) togglePlayMusic();
+        }
+
+        function selectPresetSong(type) {
+            if (userRole !== 'edit') return;
+            if (type === 'synth') {
+                useSynthAudio();
+                localStorage.removeItem('heart_custom_audio');
+                localStorage.removeItem('heart_custom_title');
+                showToast("🎵 Đã chọn Nhạc Synth Vũ Trụ");
+            } else if (type === 'piano') {
+                setCustomAudioSource(PRESET_PIANO_URL, "Nhạc Piano Lãng Mạn");
+                localStorage.setItem('heart_custom_audio', PRESET_PIANO_URL);
+                localStorage.setItem('heart_custom_title', "Nhạc Piano Lãng Mạn");
+                showToast("🎹 Đã chọn Nhạc Piano");
+            }
+
+            if (isAudioPlaying) {
+                togglePlayMusic();
+                togglePlayMusic();
+            }
+        }
+
+        function startSynthAudio() {
+            initAudioContext();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            stopSynthAudio();
+
+            const notes = [261.63, 329.63, 392.00, 493.88, 523.25];
+            notes.forEach(freq => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+
+                gain.gain.setValueAtTime(0.01, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.035, audioCtx.currentTime + 2);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+
+                synthOscillators.push({ osc, gain });
+            });
+        }
+
+        function stopSynthAudio() {
+            synthOscillators.forEach(item => {
+                try {
+                    item.gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3);
+                    setTimeout(() => item.osc.stop(), 300);
+                } catch(e) {}
+            });
+            synthOscillators = [];
+        }
+
+        // Raycasting Touch / Click Fireworks
+        const raycaster = new THREE.Raycaster();
+        const mouseVec = new THREE.Vector2();
+
+        window.addEventListener('click', (e) => {
+            if (!hasInteracted) {
+                handleInitialUserInteraction();
+                return;
+            }
+            if (e.target.closest('.pointer-active')) return;
+
+            mouseVec.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouseVec.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouseVec, camera);
+            const targetPoint = new THREE.Vector3();
+            raycaster.ray.at(90, targetPoint);
+
+            trigger3DExplosion(targetPoint);
+        });
+
+        function triggerExplosion() {
+            trigger3DExplosion(new THREE.Vector3(0, 0, 0));
+            showToast("✨ Bùng nổ phép thuật!");
+        }
+
+        function changeHeartStyle() {
+            if (userRole !== 'edit') return;
+            currentPaletteIndex = (currentPaletteIndex + 1) % colorPalettes.length;
+            update3DColors();
+            showToast(`🎨 Tông màu: ${colorPalettes[currentPaletteIndex].name}`);
+        }
+
+        function update3DColors() {
+            const palette = colorPalettes[currentPaletteIndex];
+            const p = new THREE.Color(palette.primary);
+            const s = new THREE.Color(palette.secondary);
+
+            const colors = heartGeometry.attributes.color;
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                const mixed = p.clone().lerp(s, Math.random());
+                colors.setXYZ(i, mixed.r, mixed.g, mixed.b);
+            }
+            colors.needsUpdate = true;
+
+            ribbon1.material.color = s;
+            ribbon2.material.color = new THREE.Color(palette.accent);
+            coreAura.material.color = p;
+            crystalMat.color = s;
+            bloomPass.threshold = 0.12;
+        }
+
+        function toggleSettingsModal() {
+            if (userRole !== 'edit') return;
+            const modal = document.getElementById('settingsModal');
+            const card = document.getElementById('settingsCard');
+
+            if (modal.classList.contains('opacity-0')) {
+                modal.classList.remove('opacity-0', 'pointer-events-none');
+                card.classList.remove('scale-95');
+                card.classList.add('scale-100');
+            } else {
+                card.classList.remove('scale-100');
+                card.classList.add('scale-95');
+                modal.classList.add('opacity-0', 'pointer-events-none');
+            }
+        }
+
+        function getPublicViewerURL() {
+            let baseUrl = window.location.origin + window.location.pathname;
+            const params = new URLSearchParams();
+
+            params.set('mode', 'view');
+            params.set('color', currentPaletteIndex);
+            params.set('speed', heartSpeed);
+
+            if (customSubtitleText) {
+                params.set('title', encodeURIComponent(customSubtitleText));
+            }
+
+            const customAudio = localStorage.getItem('heart_custom_audio');
+            if (customAudio && !customAudio.startsWith('data:')) {
+                params.set('songUrl', encodeURIComponent(customAudio));
+            }
+
+            return `${baseUrl}?${params.toString()}`;
+        }
+
+        function openQRModal() {
+            if (userRole !== 'edit') return;
+            const modal = document.getElementById('qrModal');
+            const card = document.getElementById('qrModalCard');
+
+            const publicUrl = getPublicViewerURL();
+            generateQRCode(publicUrl);
+
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            card.classList.remove('scale-95');
+            card.classList.add('scale-100');
+        }
+
+        function closeQRModal() {
+            const modal = document.getElementById('qrModal');
+            const card = document.getElementById('qrModalCard');
+
+            card.classList.remove('scale-100');
+            card.classList.add('scale-95');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        function generateQRCode(text) {
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = '';
+
+            new QRCode(qrContainer, {
+                text: text,
+                width: 170,
+                height: 170,
+                colorDark: "#1a0011",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+
+        function copyPublicViewerURL() {
+            const publicUrl = getPublicViewerURL();
+            
+            const tempInput = document.createElement('input');
+            tempInput.value = publicUrl;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            showToast("📋 Đã sao chép link Người Xem!");
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            toastMsg.innerText = msg;
+
+            toast.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
+
