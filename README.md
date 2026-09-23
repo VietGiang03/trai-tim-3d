@@ -13,3 +13,6 @@ Xuất bản từ nhánh `main`, thư mục gốc `/`.
 - Nút Lưu Cấu Hình lưu cài đặt trên thiết bị quản trị và cập nhật link/QR mới.
 - Có thể chọn thời điểm bắt đầu/kết thúc để phát lặp một đoạn của tệp hoặc link nhạc.
 - Chế độ Người Xem chỉ giữ nút âm thanh và gợi ý thao tác; các nút chỉnh sửa và hiệu ứng được ẩn.
+- Admin có thể dùng GitHub fine-grained token với quyền `Contents: Read and write` cho riêng repository này. Nút **Lưu & Cập Nhật Public** sẽ tải MP3 lên `assets/audio/current.mp3` và ghi toàn bộ trạng thái vào `config.json`.
+- Token chỉ được giữ trong `sessionStorage` của tab Admin, không ghi vào repository, URL hay mã QR.
+- Trang public không có tham số cấu hình sẽ tự đọc `config.json`; GitHub Pages thường cần khoảng 1–2 phút để phát hành thay đổi.

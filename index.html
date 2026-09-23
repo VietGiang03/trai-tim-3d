@@ -90,10 +90,10 @@
                 <i class="fa-solid fa-heart"></i>
             </div>
         </div>
-        <h2 id="welcomeTitle" class="text-3xl sm:text-5xl font-bold text-pink-200 text-glow mb-3 font-love">Kiệt Tác Trái Tim 3D Bloom</h2>
-        <p class="text-xs sm:text-sm text-pink-300/80 max-w-xs mb-8">Chạm nhẹ vào màn hình để khai mở phép thuật & nghe nhạc tự động ❤️</p>
+        <h2 id="welcomeTitle" class="text-3xl sm:text-5xl font-bold text-pink-200 text-glow mb-3 font-love">Có Một Điều Muốn Gửi Đến Bạn…</h2>
+        <p class="text-xs sm:text-sm text-pink-300/80 max-w-xs mb-8">Không phải ai cũng nhận được điều này. Chạm nhẹ để xem nhé 💗</p>
         <div class="px-8 py-4 rounded-full bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 text-white text-xs sm:text-sm font-semibold shadow-2xl shadow-pink-500/60 flex items-center gap-2 animate-pulse">
-            <i class="fa-solid fa-wand-magic-sparkles"></i> Chạm Để Mở Quà
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Chạm Để Khám Phá
         </div>
     </div>
 
@@ -251,10 +251,19 @@
                         </button>
                     </div>
                 </div>
+
+                <div class="p-3.5 bg-purple-950/40 border border-purple-400/40 rounded-2xl">
+                    <label class="block text-xs font-semibold text-purple-100 mb-2">
+                        <i class="fa-brands fa-github text-purple-300 mr-1"></i> Đồng bộ lên GitHub Public:
+                    </label>
+                    <input type="password" id="githubTokenInput" autocomplete="off" placeholder="GitHub token (quyền Contents: Read and write)" class="w-full bg-purple-950/70 border border-purple-400/40 rounded-xl px-3 py-2 text-xs text-purple-100 focus:outline-none focus:border-purple-300">
+                    <p class="mt-2 text-[10px] text-purple-200/70">Token chỉ lưu trong tab Admin hiện tại, không đưa vào QR hay mã nguồn. Khi bấm lưu, MP3 và toàn bộ cấu hình sẽ cập nhật lên website public.</p>
+                    <p id="cloudSyncStatus" class="mt-2 text-[10px] font-semibold text-pink-200"></p>
+                </div>
             </div>
 
-            <button onclick="saveConfiguration()" class="w-full mt-4 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 text-xs font-semibold text-white shadow-lg hover:opacity-90 transition">
-                Lưu Cấu Hình
+            <button id="savePublishBtn" onclick="saveAndPublishConfiguration()" class="w-full mt-4 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 text-xs font-semibold text-white shadow-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-wait">
+                <i class="fa-solid fa-cloud-arrow-up mr-1"></i> Lưu & Cập Nhật Public
             </button>
         </div>
     </div>
@@ -635,6 +644,13 @@
         let currentAudioSourceUrl = '';
         let clipStart = 0;
         let clipEnd = 0;
+        let publicCloudConfig = null;
+
+        const GITHUB_OWNER = 'VietGiang03';
+        const GITHUB_REPO = 'trai-tim-3d';
+        const GITHUB_BRANCH = 'main';
+        const PUBLIC_CONFIG_PATH = 'config.json';
+        const PUBLIC_AUDIO_PATH = 'assets/audio/current.mp3';
 
         const PRESET_PIANO_URL = "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=romantic-piano-112199.mp3";
 
@@ -644,9 +660,25 @@
             }
         }
 
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
+            publicCloudConfig = await loadPublicCloudConfig();
             parseRoleAndURLParams();
+
+            const savedSessionToken = sessionStorage.getItem('heart_github_token');
+            if (savedSessionToken && userRole === 'edit') {
+                document.getElementById('githubTokenInput').value = savedSessionToken;
+            }
         });
+
+        async function loadPublicCloudConfig() {
+            try {
+                const response = await fetch(`./${PUBLIC_CONFIG_PATH}?v=${Date.now()}`, { cache: 'no-store' });
+                if (!response.ok) return null;
+                return await response.json();
+            } catch (error) {
+                return null;
+            }
+        }
 
         function parseRoleAndURLParams() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -660,8 +692,9 @@
 
             applyRoleUI();
 
-            const colorParam = urlParams.get('color') || hashParams.get('color') || (userRole === 'edit' ? localStorage.getItem('heart_color') : null);
-            if (colorParam) {
+            const cloudValue = (key) => publicCloudConfig?.[key] ?? null;
+            const colorParam = urlParams.get('color') || hashParams.get('color') || (userRole === 'edit' ? localStorage.getItem('heart_color') : cloudValue('color'));
+            if (colorParam !== null && colorParam !== '') {
                 const cIndex = parseInt(colorParam);
                 if (!isNaN(cIndex) && cIndex >= 0 && cIndex < colorPalettes.length) {
                     currentPaletteIndex = cIndex;
@@ -669,20 +702,20 @@
                 }
             }
 
-            const speedParam = urlParams.get('speed') || hashParams.get('speed') || (userRole === 'edit' ? localStorage.getItem('heart_speed') : null);
+            const speedParam = urlParams.get('speed') || hashParams.get('speed') || (userRole === 'edit' ? localStorage.getItem('heart_speed') : cloudValue('speed'));
             if (speedParam) {
                 heartSpeed = parseFloat(speedParam) || 1.0;
                 document.getElementById('speedSlider').value = heartSpeed;
             }
 
-            const titleParam = urlParams.get('title') || hashParams.get('title') || (userRole === 'edit' ? localStorage.getItem('heart_subtitle') : null);
+            const titleParam = urlParams.get('title') || hashParams.get('title') || (userRole === 'edit' ? localStorage.getItem('heart_subtitle') : cloudValue('title'));
             if (titleParam) {
                 customSubtitleText = titleParam;
                 updateCustomSubtitle(customSubtitleText);
             }
 
-            const explicitAudioMode = urlParams.get('audio') || hashParams.get('audio');
-            const songUrl = urlParams.get('songUrl') || hashParams.get('songUrl');
+            const explicitAudioMode = urlParams.get('audio') || hashParams.get('audio') || (userRole === 'view' ? cloudValue('audioMode') : null);
+            const songUrl = urlParams.get('songUrl') || hashParams.get('songUrl') || (userRole === 'view' ? cloudValue('audioUrl') : null);
             const savedAudioMode = userRole === 'edit' ? localStorage.getItem('heart_audio_mode') : null;
 
             if (explicitAudioMode === 'synth') {
@@ -708,8 +741,8 @@
                 }
             }
 
-            const clipStartParam = urlParams.get('clipStart') || hashParams.get('clipStart') || (userRole === 'edit' ? localStorage.getItem('heart_clip_start') : null);
-            const clipEndParam = urlParams.get('clipEnd') || hashParams.get('clipEnd') || (userRole === 'edit' ? localStorage.getItem('heart_clip_end') : null);
+            const clipStartParam = urlParams.get('clipStart') || hashParams.get('clipStart') || (userRole === 'edit' ? localStorage.getItem('heart_clip_start') : cloudValue('clipStart'));
+            const clipEndParam = urlParams.get('clipEnd') || hashParams.get('clipEnd') || (userRole === 'edit' ? localStorage.getItem('heart_clip_end') : cloudValue('clipEnd'));
             clipStart = Math.max(0, parseFloat(clipStartParam) || 0);
             clipEnd = Math.max(0, parseFloat(clipEndParam) || 0);
             syncClipInputs();
@@ -727,8 +760,12 @@
             const currentSongDisplay = document.getElementById('currentSongDisplay');
             const footerActionButtons = document.getElementById('footerActionButtons');
             const headerControls = document.getElementById('headerControls');
+            const settingsModal = document.getElementById('settingsModal');
+            const qrModal = document.getElementById('qrModal');
 
             if (userRole === 'view') {
+                settingsModal.classList.add('hidden');
+                qrModal.classList.add('hidden');
                 mainUiLayer.classList.remove('hidden');
                 headerControls.classList.remove('justify-between');
                 headerControls.classList.add('justify-end');
@@ -744,6 +781,8 @@
                 changeColorBtn.classList.add('hidden');
                 footerHint.innerText = "Vuốt chạm để xoay góc nhìn & phóng pháo hoa sao 3D ✨";
             } else {
+                settingsModal.classList.remove('hidden');
+                qrModal.classList.remove('hidden');
                 mainUiLayer.classList.remove('hidden');
                 headerControls.classList.remove('justify-end');
                 headerControls.classList.add('justify-between');
@@ -784,9 +823,7 @@
             customSubtitleText = text;
             document.getElementById('customDisplaySubtitle').innerText = text;
             document.getElementById('customTitleInput').value = text;
-            if (text) {
-                document.getElementById('welcomeTitle').innerText = text;
-            }
+            document.getElementById('welcomeTitle').innerText = text || 'Có Một Điều Muốn Gửi Đến Bạn…';
         }
 
         function adjustHeartSpeed(val) {
@@ -1065,9 +1102,7 @@
             }
         }
 
-        function saveConfiguration() {
-            if (userRole !== 'edit' || !applyClipInputs()) return;
-
+        function persistConfigurationLocally() {
             localStorage.setItem('heart_subtitle', customSubtitleText);
             localStorage.setItem('heart_color', String(currentPaletteIndex));
             localStorage.setItem('heart_speed', String(heartSpeed));
@@ -1076,8 +1111,142 @@
             localStorage.setItem('heart_audio_mode', currentAudioMode);
 
             window.history.replaceState({}, '', buildConfiguredURL('edit'));
-            toggleSettingsModal();
-            showToast("✅ Đã lưu! QR mới sẽ dùng đúng cấu hình này.");
+        }
+
+        function setCloudSyncStatus(message, isError = false) {
+            const status = document.getElementById('cloudSyncStatus');
+            status.innerText = message;
+            status.className = `mt-2 text-[10px] font-semibold ${isError ? 'text-red-300' : 'text-emerald-300'}`;
+        }
+
+        function textToBase64(text) {
+            const bytes = new TextEncoder().encode(text);
+            let binary = '';
+            bytes.forEach((byte) => binary += String.fromCharCode(byte));
+            return btoa(binary);
+        }
+
+        async function getGithubFileSha(path, token) {
+            const apiUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${path}?ref=${GITHUB_BRANCH}`;
+            const response = await fetch(apiUrl, {
+                headers: {
+                    'Accept': 'application/vnd.github+json',
+                    'Authorization': `Bearer ${token}`,
+                    'X-GitHub-Api-Version': '2022-11-28'
+                }
+            });
+
+            if (response.status === 404) return null;
+            if (!response.ok) throw new Error(`GitHub không đọc được ${path} (${response.status}).`);
+            return (await response.json()).sha;
+        }
+
+        async function putGithubFile(path, base64Content, message, token) {
+            const sha = await getGithubFileSha(path, token);
+            const apiUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${path}`;
+            const body = {
+                message,
+                content: base64Content,
+                branch: GITHUB_BRANCH
+            };
+            if (sha) body.sha = sha;
+
+            const response = await fetch(apiUrl, {
+                method: 'PUT',
+                headers: {
+                    'Accept': 'application/vnd.github+json',
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                    'X-GitHub-Api-Version': '2022-11-28'
+                },
+                body: JSON.stringify(body)
+            });
+
+            if (!response.ok) {
+                let detail = '';
+                try { detail = (await response.json()).message || ''; } catch (error) {}
+                throw new Error(`GitHub từ chối cập nhật ${path} (${response.status})${detail ? `: ${detail}` : ''}`);
+            }
+            return await response.json();
+        }
+
+        async function uploadCurrentAudioToGithub(token) {
+            if (currentAudioMode !== 'local' || !currentAudioSourceUrl.startsWith('data:audio/')) {
+                return currentAudioMode === 'url' ? currentAudioSourceUrl : '';
+            }
+
+            const commaIndex = currentAudioSourceUrl.indexOf(',');
+            const base64Audio = currentAudioSourceUrl.substring(commaIndex + 1);
+            const estimatedBytes = Math.floor(base64Audio.length * 0.75);
+            if (estimatedBytes > 25 * 1024 * 1024) {
+                throw new Error('Tệp MP3 lớn hơn 25 MB. Hãy chọn bản nhạc nhỏ hơn.');
+            }
+
+            setCloudSyncStatus('Đang tải MP3 lên GitHub…');
+            await putGithubFile(PUBLIC_AUDIO_PATH, base64Audio, 'Update public heart audio', token);
+            return `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/${PUBLIC_AUDIO_PATH}?v=${Date.now()}`;
+        }
+
+        async function saveAndPublishConfiguration() {
+            if (userRole !== 'edit' || !applyClipInputs()) return;
+
+            const tokenInput = document.getElementById('githubTokenInput');
+            const token = tokenInput.value.trim();
+            if (!token) {
+                setCloudSyncStatus('Cần nhập GitHub token có quyền Contents: Read and write.', true);
+                tokenInput.focus();
+                return;
+            }
+
+            const button = document.getElementById('savePublishBtn');
+            button.disabled = true;
+            button.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Đang cập nhật GitHub…';
+
+            try {
+                sessionStorage.setItem('heart_github_token', token);
+                persistConfigurationLocally();
+
+                const publicAudioUrl = await uploadCurrentAudioToGithub(token);
+                const publicAudioMode = currentAudioMode === 'local' ? 'url' : currentAudioMode;
+                const publicConfig = {
+                    version: 1,
+                    updatedAt: new Date().toISOString(),
+                    title: customSubtitleText,
+                    color: currentPaletteIndex,
+                    speed: heartSpeed,
+                    clipStart,
+                    clipEnd,
+                    audioMode: publicAudioMode,
+                    audioUrl: publicAudioMode === 'url' ? publicAudioUrl : '',
+                    audioTitle: document.getElementById('songTitleText').innerText
+                };
+
+                setCloudSyncStatus('Đang cập nhật màu, lời nhắn và đoạn nhạc…');
+                await putGithubFile(
+                    PUBLIC_CONFIG_PATH,
+                    textToBase64(JSON.stringify(publicConfig, null, 2)),
+                    'Update public heart configuration',
+                    token
+                );
+
+                if (currentAudioMode === 'local' && publicAudioUrl) {
+                    currentAudioMode = 'url';
+                    currentAudioSourceUrl = publicAudioUrl;
+                    localStorage.setItem('heart_custom_audio', publicAudioUrl);
+                    localStorage.setItem('heart_audio_mode', 'url');
+                    persistConfigurationLocally();
+                }
+
+                publicCloudConfig = publicConfig;
+                setCloudSyncStatus('Đã cập nhật! GitHub Pages sẽ hiển thị bản mới sau khoảng 1–2 phút.');
+                showToast('✅ Đã lưu và cập nhật Public!');
+            } catch (error) {
+                setCloudSyncStatus(error.message || 'Không thể cập nhật GitHub.', true);
+                showToast('⚠️ Cập nhật GitHub thất bại');
+            } finally {
+                button.disabled = false;
+                button.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-1"></i> Lưu & Cập Nhật Public';
+            }
         }
 
         function buildConfiguredURL(mode) {
@@ -1106,6 +1275,10 @@
             } else if (currentAudioMode === 'url' && shareableAudioUrl) {
                 // A public MP3 URL can travel with the viewer link and QR.
                 params.set('songUrl', shareableAudioUrl);
+            } else if (currentAudioMode === 'local' && mode === 'edit') {
+                // Keep Admin attached to the locally selected file until the
+                // GitHub upload replaces it with a shareable public URL.
+                params.set('audio', 'local');
             } else {
                 // Files selected from this device are private browser data and
                 // cannot be opened on another phone. Keep the QR public and use
